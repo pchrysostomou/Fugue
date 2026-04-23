@@ -1,0 +1,15 @@
+# Compiled binaries
+fractal
+resonance
+*.class
+life_state.dat
+
+# Database (personal thoughts log)
+anonymous.db
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/

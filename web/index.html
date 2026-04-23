@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>∞</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000008;
+      overflow: hidden;
+      font-family: 'Courier New', Courier, monospace;
+      cursor: crosshair;
+    }
+
+    #cosmos { position: fixed; inset: 0; display: block; width: 100vw; height: 100vh; }
+
+    /* ── thought ───────────────────────────────────────── */
+    #overlay {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #thought-wrap { max-width: min(58vw, 660px); text-align: center; }
+    #thought {
+      font-size: clamp(11px, 1.7vw, 16px);
+      color: rgba(210, 160, 255, 0.85);
+      line-height: 2; letter-spacing: 0.14em;
+      transition: opacity 1.8s ease;
+    }
+    #thought::after {
+      content: '▌';
+      animation: blink 1s step-end infinite;
+      opacity: 0.5;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── source attribution flash ──────────────────────── */
+    #attribution {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      font-size: 8px; letter-spacing: 0.3em;
+      color: rgba(0, 220, 255, 0);
+      transition: color 0.4s;
+      pointer-events: none;
+    }
+    #attribution.show { color: rgba(0, 220, 255, 0.4); }
+
+    /* ── lang nodes ────────────────────────────────────── */
+    #lang-panel {
+      position: fixed; top: 22px; right: 22px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .lnode {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 9px; letter-spacing: 0.18em;
+      color: rgba(0,220,255,0.25); transition: color 0.5s;
+    }
+    .lnode.lit { color: rgba(0,220,255,0.7); }
+    .ldot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(0,220,255,0.1); flex-shrink: 0;
+      transition: background 0.5s, box-shadow 0.5s;
+    }
+    .ldot.on {
+      background: #00dfff;
+      box-shadow: 0 0 5px #00dfff, 0 0 12px rgba(0,220,255,0.35);
+      animation: dpulse 2.8s ease-in-out infinite;
+    }
+    @keyframes dpulse {
+      50% { box-shadow: 0 0 10px #00dfff, 0 0 22px rgba(0,220,255,0.4); }
+    }
+
+    /* ── bottom left stream ────────────────────────────── */
+    #stream {
+      position: fixed; bottom: 22px; left: 22px;
+      font-size: 8.5px; color: rgba(0,210,90,0.3);
+      letter-spacing: 0.06em; max-width: 320px; line-height: 1.9;
+    }
+    #stream .sl { animation: sfade 0.6s ease; }
+    @keyframes sfade { from { opacity:0; transform: translateY(4px); } }
+
+    /* ── bottom right: timestamp + stats ──────────────── */
+    #ts {
+      position: fixed; bottom: 22px; right: 22px;
+      font-size: 8.5px; color: rgba(0,220,255,0.18);
+      letter-spacing: 0.18em; text-align: right; line-height: 2;
+    }
+
+    /* ── mood badge ────────────────────────────────────── */
+    #mood-badge {
+      position: fixed; top: 22px; left: 22px;
+      font-size: 8px; letter-spacing: 0.2em;
+      color: rgba(0,220,255,0.2);
+      transition: color 1s, text-shadow 1s;
+      line-height: 2;
+    }
+
+    /* ── audio unlock prompt ───────────────────────────── */
+    #audio-unlock {
+      position: fixed; bottom: 50%; left: 50%; transform: translate(-50%, 50%);
+      font-size: 9px; letter-spacing: 0.3em;
+      color: rgba(0,220,255,0.25);
+      pointer-events: none;
+      animation: flicker 3s ease-in-out infinite;
+      transition: opacity 1.5s;
+      margin-top: 80px;
+    }
+    @keyframes flicker { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
+
+    /* ── info button ───────────────────────────────────── */
+    #info-btn {
+      position: fixed; top: 22px; left: 50%; transform: translateX(-50%);
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 1px solid rgba(0,220,255,0.2);
+      color: rgba(0,220,255,0.3); font-size: 11px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; letter-spacing: 0; transition: all 0.3s;
+      user-select: none;
+    }
+    #info-btn:hover { border-color: rgba(0,220,255,0.6); color: rgba(0,220,255,0.8); }
+
+    /* ── DECODE PANEL ──────────────────────────────────── */
+    #decode {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 300px;
+      background: rgba(0, 4, 20, 0.92);
+      border-left: 1px solid rgba(0,220,255,0.08);
+      padding: 30px 24px;
+      display: flex; flex-direction: column; gap: 0;
+      transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+      overflow-y: auto;
+    }
+    #decode.open { transform: translateX(0); }
+
+    .dec-title {
+      font-size: 9px; letter-spacing: 0.4em;
+      color: rgba(0,220,255,0.4); margin-bottom: 28px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(0,220,255,0.06);
+    }
+
+    .dec-section {
+      display: flex; gap: 14px; margin-bottom: 22px; align-items: flex-start;
+    }
+    .dec-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 3px;
+    }
+    .dec-label {
+      font-size: 8px; letter-spacing: 0.25em;
+      color: rgba(0,220,255,0.5); margin-bottom: 4px;
+    }
+    .dec-desc {
+      font-size: 9px; line-height: 1.8;
+      color: rgba(255,255,255,0.3); letter-spacing: 0.05em;
+    }
+    .dec-live {
+      font-size: 9px; color: rgba(0,220,255,0.5); margin-top: 3px;
+    }
+
+    .dec-divider {
+      border: none; border-top: 1px solid rgba(0,220,255,0.05);
+      margin: 8px 0 22px;
+    }
+
+    .dec-stat-row {
+      display: flex; justify-content: space-between;
+      font-size: 8.5px; letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.25); margin-bottom: 10px;
+    }
+    .dec-stat-row span:last-child { color: rgba(0,220,255,0.5); }
+
+    .dec-close {
+      margin-top: auto; padding-top: 20px;
+      font-size: 8px; letter-spacing: 0.3em;
+      color: rgba(0,220,255,0.2); cursor: pointer;
+      border-top: 1px solid rgba(0,220,255,0.05);
+      padding-top: 16px; text-align: center;
+    }
+    .dec-close:hover { color: rgba(0,220,255,0.5); }
+
+    /* ── scanline + vignette ───────────────────────────── */
+    #scan {
+      position: fixed; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.02) 3px,rgba(0,0,0,0.02) 4px);
+    }
+    #vignette {
+      position: fixed; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.7) 100%);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="cosmos"></canvas>
+
+  <div id="overlay">
+    <div id="thought-wrap">
+      <div id="thought"></div>
+    </div>
+  </div>
+
+  <div id="attribution"></div>
+  <div id="lang-panel"></div>
+  <div id="stream"></div>
+  <div id="ts"></div>
+  <div id="mood-badge"></div>
+  <div id="audio-unlock">· click anywhere to enable audio ·</div>
+  <div id="info-btn" title="Press D to decode">?</div>
+
+  <!-- DECODE PANEL -->
+  <div id="decode">
+    <div class="dec-title">SIGNAL DECODER</div>
+
+    <div class="dec-section">
+      <div class="dec-dot" style="background:#6600cc"></div>
+      <div>
+        <div class="dec-label">PURPLE CELLS</div>
+        <div class="dec-desc">Java · Conway's Game of Life<br>cells that live, die, and reproduce<br>by simple neighbour rules</div>
+        <div class="dec-live" id="d-alive">— cells alive</div>
+      </div>
+    </div>
+
+    <div class="dec-section">
+      <div class="dec-dot" style="background:#ffcc00"></div>
+      <div>
+        <div class="dec-label">GOLDEN TRAIL</div>
+        <div class="dec-desc">Java · Langton's Ant<br>a virtual ant that draws complex<br>patterns from two simple rules</div>
+      </div>
+    </div>
+
+    <div class="dec-section">
+      <div class="dec-dot" style="background:#00d0ff"></div>
+      <div>
+        <div class="dec-label">CYAN PARTICLES</div>
+        <div class="dec-desc">JavaScript · 280 drifting nodes<br>attracted to each other &amp; to you<br>click anywhere to burst them</div>
+        <div class="dec-live" id="d-entropy">— neural entropy</div>
+      </div>
+    </div>
+
+    <div class="dec-section">
+      <div class="dec-dot" style="background:#00dfff"></div>
+      <div>
+        <div class="dec-label">PULSING RINGS</div>
+        <div class="dec-desc">C · Mandelbrot fractal<br>400 points sampled per call<br>at machine speed</div>
+      </div>
+    </div>
+
+    <div class="dec-section">
+      <div class="dec-dot" style="background:#c896ff"></div>
+      <div>
+        <div class="dec-label">TYPED POETRY</div>
+        <div class="dec-desc">Python (Markov chains) + Ruby<br>AI generates new thoughts every<br>few seconds from a word corpus</div>
+        <div class="dec-live" id="d-thoughts">— thoughts born</div>
+      </div>
+    </div>
+
+    <div class="dec-section">
+      <div class="dec-dot" style="background:#fa7343"></div>
+      <div>
+        <div class="dec-label">HARMONICS / AUDIO</div>
+        <div class="dec-desc">Swift · golden ratio sequences<br>φ = 1.618034… frequencies<br>played as ambient tones</div>
+      </div>
+    </div>
+
+    <div class="dec-section">
+      <div class="dec-dot" style="background:#4EAA25"></div>
+      <div>
+        <div class="dec-label">DATA STREAM</div>
+        <div class="dec-desc">Perl · oracle symbols<br>AWK · signal transformer<br>Node.js · neural network</div>
+      </div>
+    </div>
+
+    <hr class="dec-divider">
+
+    <div class="dec-stat-row"><span>UPTIME</span><span id="d-uptime">—</span></div>
+    <div class="dec-stat-row"><span>MOOD</span><span id="d-mood">—</span></div>
+    <div class="dec-stat-row"><span>φ (PHI)</span><span id="d-phi">1.618034</span></div>
+    <div class="dec-stat-row"><span>LANGUAGES</span><span>11</span></div>
+
+    <div class="dec-close" id="decode-close">× close  (D)</div>
+  </div>
+
+  <div id="scan"></div>
+  <div id="vignette"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
