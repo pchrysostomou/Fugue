@@ -240,6 +240,3 @@ This was built to see what happens when you let eleven languages talk to each ot
 
 ---
 
-## License
-
-MIT — do whatever you want with it.
